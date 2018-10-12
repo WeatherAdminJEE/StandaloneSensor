@@ -1,13 +1,20 @@
 package imt.org.web.standalonesensor.mqtt;
 
+import imt.org.web.commonmodel.SensorData;
+import imt.org.web.standalonesensor.Publisher;
 import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+
 @Getter
 @Setter
-public class MQTTPublisher implements MqttCallback {
+public class MQTTPublisher extends Publisher implements MqttCallback {
 
     private MqttClient client;
     private String brokerUrl;
@@ -41,11 +48,10 @@ public class MQTTPublisher implements MqttCallback {
      * Publish a message to an MQTT server
      * @param topicName name of the topic to publish to
      * @param qos quality of service to delivery the message at (0,1,2)
-     * @param payload bytes to send to the MQTT server
+     * @param sensorData sensor data to send to the MQTT server
      * @throws MqttException
      */
-    public void publish(String topicName, int qos, byte[] payload) throws MqttException {
-
+    public void mqttPublish(String topicName, int qos, SensorData sensorData) throws MqttException {
         // Connect to the MQTT server
         System.out.println("Connecting to " + brokerUrl + " with client ID " + client.getClientId());
         client.connect();
@@ -53,12 +59,44 @@ public class MQTTPublisher implements MqttCallback {
 
         System.out.println("Publishing to topic \"" + topicName+"\" qos " + qos);
 
+        /*byte[] payload = ("idSensor:"+String.valueOf(sensorData.getIdSensor())+"\n"
+                         +"idCountry"+sensorData.getIdCountry()+"\n"
+                         +"idCity:"+sensorData.getIdCity()+"\n"
+                         +"temperature:"+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
+                         +"windSpeed:"+String.valueOf(sensorData.getMeasure().getWindSpeed())+"\n"
+                         +"pressure:"+String.valueOf(sensorData.getMeasure().getPressure())+"\n"
+                         +"timestamp:"+sensorData.getDate().toString()).getBytes();*/
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(sensorData);
+            out.flush();
+            byte[] payload = bos.toByteArray();
+            System.out.println(payload);
+            MqttMessage message = new MqttMessage(payload);
+            message.setQos(qos);
+            client.publish(topicName, message);
+        } catch (IOException ex) {
+
+        }
+
+        System.out.println(
+                "idSensor:"+String.valueOf(sensorData.getIdSensor())+"\n"
+                +"idCountry"+sensorData.getIdCountry()+"\n"
+                +"idCity:"+sensorData.getIdCity()+"\n"
+                +"temperature:"+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
+                +"windSpeed:"+String.valueOf(sensorData.getMeasure().getWindSpeed())+"\n"
+                +"pressure:"+String.valueOf(sensorData.getMeasure().getPressure())+"\n"
+                +"timestamp:"+sensorData.getDate().toString()
+        );
         // Create and configure a message
-        MqttMessage message = new MqttMessage(payload);
-        message.setQos(qos);
+        //MqttMessage message = new MqttMessage(payload);
+        //message.setQos(qos);
 
         // Send the message to the server
-        client.publish(topicName, message);
+        //client.publish(topicName, message);
 
         // Disconnect the client
         client.disconnect();
@@ -85,6 +123,6 @@ public class MQTTPublisher implements MqttCallback {
      * @see MqttCallback#messageArrived(String, MqttMessage)
      */
     public void messageArrived(String topic, MqttMessage message) {
-        // Called when a message arrives from the server that matches any subscription made by the client
+        // Called when a message arrives from the server
     }
 }

@@ -2,41 +2,40 @@ package imt.org.web.standalonesensor.main;
 
 import imt.org.web.commonmodel.Measure;
 import imt.org.web.commonmodel.SensorData;
-import imt.org.web.standalonesensor.Publisher;
-import imt.org.web.standalonesensor.http.HTTPPublisher;
-import imt.org.web.standalonesensor.mqtt.MQTTPublisher;
+import imt.org.web.standalonesensor.publisher.IPublisher;
+import imt.org.web.standalonesensor.publisher.http.HTTPPublisher;
+import imt.org.web.standalonesensor.publisher.mqtt.MQTTPublisher;
+
 import org.apache.commons.math3.util.Precision;
-import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.Date;
 import java.sql.Timestamp;
+import java.util.ResourceBundle;
 
+/**
+ * Main class
+ */
 public class StandaloneSensorMain {
 
+    // Config file
+    public static final ResourceBundle CONFIG = ResourceBundle.getBundle("config");
+
+    /**
+     * Main
+     * @param args Main args
+     */
     public static void main(String[] args) {
 
-        // Test module dependency
-
         System.out.println("StandaloneSensor!");
-        //SensorData test = new SensorData();
 
-        Publisher publisher;
-
-        String topic = "foo";
-        int qos = 2;
-        String clientId = "Jean Cule";
-        String broker = "barnab2.tk";
-        int port = 21883;
-        boolean cleanSession = true; // Non durable subscriptions
-        String protocol = "tcp://";
-        String url = protocol + broker + ":" + port;
-
+        IPublisher publisher;
+        String clientId = "";
         String mode = "";
         int idSensor = 0;
         String country = "";
         String city = "";
 
-        // Parse the arguments
+        // Parse args
         for (int i=0; i<args.length; i++) {
             if (args[i].length() == 2 && args[i].startsWith("-")) {
                 char arg = args[i].charAt(1);
@@ -56,6 +55,7 @@ public class StandaloneSensorMain {
                         break;
                     case 'i':
                         idSensor = Integer.parseInt(args[++i]);
+                        clientId = "Sensor" + idSensor;
                         break;
                     case 'p':
                         country = args[++i];
@@ -75,52 +75,54 @@ public class StandaloneSensorMain {
             }
         }
 
+        // Send data loops
         try {
-            boolean loop = true;
             if("http".equals(mode)) {
                 publisher = new HTTPPublisher();
-                while(loop) {
+                while(true) {
                     SensorData temp = generateSensorData(idSensor, country, city);
-                    ((HTTPPublisher) publisher).postPublish(temp);
+                    publisher.publish(temp);
                     Thread.sleep(10000);
-                    if(idSensor == 0) {
-                        loop = false;
-                    }
                 }
             } else if ("mqtt".equals(mode)) {
-                publisher = new MQTTPublisher(url, clientId, cleanSession);
-                while(loop) {
+                publisher = new MQTTPublisher(clientId);
+                while(true) {
                     SensorData temp = generateSensorData(idSensor, country, city);
-                    ((MQTTPublisher) publisher).mqttPublish(topic, qos, temp);
+                    publisher.publish(temp);
                     Thread.sleep(10000);
-                    if(idSensor == 0) {
-                        loop = false;
-                    }
                 }
             }
-        } catch(MqttException me) {
-            System.out.println("MQTT Error : " + me.getMessage());
-        } catch (Exception ex) {
-            System.out.println("Error : " + ex.getMessage());
+        } catch (InterruptedException ex) {
+            System.out.println("Send data loop error : " + ex.getMessage());
         }
     }
 
+    /**
+     * Generate random data
+     * @param idSensor Sensor ID
+     * @param country Country
+     * @param city City
+     * @return
+     */
     static SensorData generateSensorData(int idSensor, String country, String city) {
         Measure measure = new Measure(
-                Precision.round(Math.random()*30,2),
-                Precision.round(Math.random()*90,2),
-                Precision.round(1000 + Math.random()*10,2)
+            Precision.round(17 + Math.random() * 11,2),
+            Precision.round(Math.random() * 60,2),
+            Precision.round(1010 + Math.random() * 5,2)
         );
         Timestamp timestamp = new Timestamp(new Date().getTime());
         return new SensorData(idSensor, country, city, measure, timestamp);
     }
 
+    /**
+     * Print help
+     */
     static void printHelp() {
         System.out.println(
-            "Syntax:\n\n" +
+            "Help:\n\n" +
                     "    Sample [-h] [-m <mode>] [-i <id Sensor>] [-p <country>] [-v <city>]\n\n" +
                     "    -h  Print this help text and quit\n" +
-                    "    -m  Desired mode (MQTT or HTTP)\n" +
+                    "    -m  Desired mode (mqtt or http)\n" +
                     "    -i  Sensor ID\n" +
                     "    -p  Desired country\n" +
                     "    -v  Desired city\n"

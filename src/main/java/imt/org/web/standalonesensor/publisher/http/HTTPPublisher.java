@@ -72,8 +72,8 @@ public class HTTPPublisher implements IPublisher {
                 +"&idCountry="+sensorData.getIdCountry()
                 +"&idCity="+sensorData.getIdCity()
                 +"&temperature="+String.valueOf(sensorData.getMeasure().getTemperature())
-                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getTemperature())
-                +"&pressure="+String.valueOf(sensorData.getMeasure().getTemperature())
+                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getWindSpeed())
+                +"&pressure="+String.valueOf(sensorData.getMeasure().getPressure())
                 +"&timestamp="+sensorData.getDate().toString();
     }
 }

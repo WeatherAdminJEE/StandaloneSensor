@@ -55,12 +55,12 @@ public class HTTPPublisher implements IPublisher {
             );
 
             // Add POST request params
-            writer.write("idSensor="+String.valueOf(sensorData.getIdSensor())+"\n"
-                +"&idCountry="+sensorData.getIdCountry()+"\n"
-                +"&idCity="+sensorData.getIdCity()+"\n"
-                +"&temperature="+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
-                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
-                +"&pressure="+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
+            writer.write("idSensor="+String.valueOf(sensorData.getIdSensor())
+                +"&idCountry="+sensorData.getIdCountry()
+                +"&idCity="+sensorData.getIdCity()
+                +"&temperature="+String.valueOf(sensorData.getMeasure().getTemperature())
+                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getTemperature())
+                +"&pressure="+String.valueOf(sensorData.getMeasure().getTemperature())
                 +"&timestamp="+sensorData.getDate().toString());
             writer.flush();
             String line;

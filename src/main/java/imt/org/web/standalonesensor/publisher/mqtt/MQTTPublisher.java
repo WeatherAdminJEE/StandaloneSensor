@@ -70,7 +70,7 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
 
             System.out.println(
                 "idSensor:"+String.valueOf(sensorData.getIdSensor())+"\n"
-                +"idCountry"+sensorData.getIdCountry()+"\n"
+                +"idCountry:"+sensorData.getIdCountry()+"\n"
                 +"idCity:"+sensorData.getIdCity()+"\n"
                 +"temperature:"+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
                 +"windSpeed:"+String.valueOf(sensorData.getMeasure().getWindSpeed())+"\n"

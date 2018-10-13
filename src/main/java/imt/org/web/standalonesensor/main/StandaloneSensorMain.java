@@ -28,7 +28,6 @@ public class StandaloneSensorMain {
 
         System.out.println("StandaloneSensor!");
 
-        IPublisher publisher;
         String clientId = "";
         String mode = "";
         int idSensor = 0;
@@ -77,20 +76,16 @@ public class StandaloneSensorMain {
 
         // Send data loops
         try {
+            IPublisher publisher = null;
             if("http".equals(mode)) {
                 publisher = new HTTPPublisher();
-                while(true) {
-                    SensorData temp = generateSensorData(idSensor, country, city);
-                    publisher.publish(temp);
-                    Thread.sleep(10000);
-                }
             } else if ("mqtt".equals(mode)) {
                 publisher = new MQTTPublisher(clientId);
-                while(true) {
-                    SensorData temp = generateSensorData(idSensor, country, city);
-                    publisher.publish(temp);
-                    Thread.sleep(10000);
-                }
+            }
+            while(true) {
+                SensorData temp = generateSensorData(idSensor, country, city);
+                publisher.publish(temp);
+                Thread.sleep(10000);
             }
         } catch (InterruptedException ex) {
             System.out.println("Send data loop error : " + ex.getMessage());

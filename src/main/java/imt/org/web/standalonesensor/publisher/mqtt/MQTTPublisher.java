@@ -32,13 +32,7 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
      * @param clientId ID of the client to connect MQTT broker
      */
     public MQTTPublisher(String clientId) {
-        String url = StandaloneSensorMain.CONFIG.getString("MQTTBroker");
-        String port = StandaloneSensorMain.CONFIG.getString("MQTTPort");
-        String protocol = "tcp://";
-        brokerUrl = protocol + url + ":" + port;
-        cleanSession = true;
-        qos = 2;
-        topic = StandaloneSensorMain.CONFIG.getString("MQTTTopic");
+        initMQTTPublisher();
 
         // Temp directory
         String tmpDir = System.getProperty("java.io.tmpdir");
@@ -47,13 +41,24 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
         try {
             // Construct an MQTT blocking mode client
             client = new MqttClient(this.brokerUrl, clientId, dataStore);
-
-            // Set this wrapper as the callback handler
             client.setCallback(this);
         } catch (MqttException e) {
             System.out.println("MQTTPublisher() - Unable to set up client : " + e.getMessage());
             System.exit(1);
         }
+    }
+
+    /**
+     * Init MQTTPublisher properties
+     */
+    private void initMQTTPublisher() {
+        String url = StandaloneSensorMain.CONFIG.getString("MQTTBroker");
+        String port = StandaloneSensorMain.CONFIG.getString("MQTTPort");
+        String protocol = "tcp://";
+        brokerUrl = protocol + url + ":" + port;
+        cleanSession = true;
+        qos = 2;
+        topic = StandaloneSensorMain.CONFIG.getString("MQTTTopic");
     }
 
     /**
@@ -68,26 +73,10 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
             client.connect();
             System.out.println("Connected");
 
-            System.out.println(
-                "idSensor:"+String.valueOf(sensorData.getIdSensor())+"\n"
-                +"idCountry:"+sensorData.getIdCountry()+"\n"
-                +"idCity:"+sensorData.getIdCity()+"\n"
-                +"temperature:"+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
-                +"windSpeed:"+String.valueOf(sensorData.getMeasure().getWindSpeed())+"\n"
-                +"pressure:"+String.valueOf(sensorData.getMeasure().getPressure())+"\n"
-                +"timestamp:"+sensorData.getDate().toString()
-            );
-
-            // Serialize object
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutput out;
-            out = new ObjectOutputStream(bos);
-            out.writeObject(sensorData);
-            out.flush();
-            byte[] payload = bos.toByteArray();
+            printSentData(sensorData);
 
             // Create MQTT message
-            MqttMessage message = new MqttMessage(payload);
+            MqttMessage message = new MqttMessage(serializeSensorData(sensorData));
             message.setQos(qos);
 
             // Publish message
@@ -102,6 +91,21 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
         } catch (IOException ex) {
             System.out.println("publish() - Unable to serialize object : " + ex.getMessage());
         }
+    }
+
+    /**
+     * Serialize a SensorData object
+     * @param sensorData SensorData to serialize
+     * @return Serialized SensorData
+     * @throws IOException
+     */
+    public byte[] serializeSensorData(SensorData sensorData) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ObjectOutput objectOutput;
+        objectOutput = new ObjectOutputStream(outputStream);
+        objectOutput.writeObject(sensorData);
+        objectOutput.flush();
+        return outputStream.toByteArray();
     }
 
     /**

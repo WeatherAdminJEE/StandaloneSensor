@@ -44,24 +44,10 @@ public class HTTPPublisher implements IPublisher {
             connection.setDoOutput(true);
             OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
 
-            System.out.println(
-                "idSensor:"+String.valueOf(sensorData.getIdSensor())+"\n"
-                +"idCountry"+sensorData.getIdCountry()+"\n"
-                +"idCity:"+sensorData.getIdCity()+"\n"
-                +"temperature:"+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
-                +"windSpeed:"+String.valueOf(sensorData.getMeasure().getWindSpeed())+"\n"
-                +"pressure:"+String.valueOf(sensorData.getMeasure().getPressure())+"\n"
-                +"timestamp:"+sensorData.getDate().toString()
-            );
+            printSentData(sensorData);
 
             // Add POST request params
-            writer.write("idSensor="+String.valueOf(sensorData.getIdSensor())
-                +"&idCountry="+sensorData.getIdCountry()
-                +"&idCity="+sensorData.getIdCity()
-                +"&temperature="+String.valueOf(sensorData.getMeasure().getTemperature())
-                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getTemperature())
-                +"&pressure="+String.valueOf(sensorData.getMeasure().getTemperature())
-                +"&timestamp="+sensorData.getDate().toString());
+            writer.write(setPOSTParams(sensorData));
             writer.flush();
             String line;
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -74,5 +60,20 @@ public class HTTPPublisher implements IPublisher {
         } catch (IOException ex) {
             System.out.println("publish() - Error sending POST request : " + ex.getMessage());
         }
+    }
+
+    /**
+     * Set POST request params
+     * @param sensorData SensorData to set params
+     * @return URI params
+     */
+    public String setPOSTParams(SensorData sensorData) {
+        return "idSensor="+String.valueOf(sensorData.getIdSensor())
+                +"&idCountry="+sensorData.getIdCountry()
+                +"&idCity="+sensorData.getIdCity()
+                +"&temperature="+String.valueOf(sensorData.getMeasure().getTemperature())
+                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getTemperature())
+                +"&pressure="+String.valueOf(sensorData.getMeasure().getTemperature())
+                +"&timestamp="+sensorData.getDate().toString();
     }
 }

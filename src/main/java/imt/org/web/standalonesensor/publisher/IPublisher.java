@@ -22,9 +22,9 @@ public interface IPublisher {
             "idSensor:"+String.valueOf(sensorData.getIdSensor())+"\n"
             +"idCountry:"+sensorData.getIdCountry()+"\n"
             +"idCity:"+sensorData.getIdCity()+"\n"
-            +"temperature:"+String.valueOf(sensorData.getMeasure().getTemperature())+"\n"
-            +"windSpeed:"+String.valueOf(sensorData.getMeasure().getWindSpeed())+"\n"
-            +"pressure:"+String.valueOf(sensorData.getMeasure().getPressure())+"\n"
+            +"gpsCoordinates:"+sensorData.getGpsCoordinates()+"\n"
+            +"measureType:"+sensorData.getMeasureType()+"\n"
+            +"measureValue:"+sensorData.getMeasureValue()+"\n"
             +"timestamp:"+sensorData.getDate().toString()
         );
     }

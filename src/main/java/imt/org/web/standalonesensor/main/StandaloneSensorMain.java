@@ -1,6 +1,6 @@
 package imt.org.web.standalonesensor.main;
 
-import imt.org.web.commonmodel.Measure;
+import imt.org.web.commonmodel.MeasureType;
 import imt.org.web.commonmodel.SensorData;
 import imt.org.web.standalonesensor.publisher.IPublisher;
 import imt.org.web.standalonesensor.publisher.http.HTTPPublisher;
@@ -33,6 +33,8 @@ public class StandaloneSensorMain {
         int idSensor = 0;
         String country = "";
         String city = "";
+        String gpsCoordinates = "";
+        MeasureType measureType = null;
 
         // Parse args
         for (int i=0; i<args.length; i++) {
@@ -62,6 +64,12 @@ public class StandaloneSensorMain {
                     case 'v':
                         city = args[++i];
                         break;
+                    case 'g':
+                        gpsCoordinates = args[++i];
+                        break;
+                    case 't':
+                        measureType = setMeasureType(args[++i]);
+                        break;
                     default:
                         System.out.println("Unrecognised argument: " + args[i]);
                         printHelp();
@@ -83,7 +91,7 @@ public class StandaloneSensorMain {
                 publisher = new MQTTPublisher(clientId);
             }
             while(true) {
-                SensorData temp = generateSensorData(idSensor, country, city);
+                SensorData temp = generateSensorData(idSensor, country, city, gpsCoordinates, measureType);
                 publisher.publish(temp);
                 Thread.sleep(10000);
             }
@@ -93,20 +101,52 @@ public class StandaloneSensorMain {
     }
 
     /**
-     * Generate random data
-     * @param idSensor Sensor ID
-     * @param country Country
-     * @param city City
-     * @return
+     * Set MeasureType from main args
+     * @param measureTypeArg Main measure type arg
+     * @return MeasureType
      */
-    static SensorData generateSensorData(int idSensor, String country, String city) {
-        Measure measure = new Measure(
-            Precision.round(17 + Math.random() * 11,2),
-            Precision.round(Math.random() * 60,2),
-            Precision.round(1010 + Math.random() * 5,2)
-        );
+    public static MeasureType setMeasureType(String measureTypeArg) {
+        switch(measureTypeArg) {
+            case "temp":
+                return MeasureType.TEMPERATURE;
+            case "pres":
+                return MeasureType.ATM_PRESSURE;
+            case "wspeed":
+                return MeasureType.WIND_SPEED;
+            case "wdir":
+                return MeasureType.WIND_DIRECTION;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Generate random data
+     * @param idSensor ID Sensor
+     * @param country ID Country
+     * @param city ID city
+     * @param gpsCoordinates GPS coordinates
+     * @param measureType Measure type
+     * @return Random data
+     */
+    static SensorData generateSensorData(int idSensor, String country, String city, String gpsCoordinates, MeasureType measureType) {
+        double measureValue = 0.0;
+        switch(measureType) {
+            case TEMPERATURE:
+                measureValue = Precision.round(17 + Math.random() * 11,2);
+                break;
+            case ATM_PRESSURE:
+                measureValue = Precision.round(1010 + Math.random() * 5,2);
+                break;
+            case WIND_SPEED:
+                measureValue = Precision.round(Math.random() * 60,2);
+                break;
+            case WIND_DIRECTION:
+                measureValue = Precision.round(Math.random() * 60,2);
+                break;
+        }
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        return new SensorData(idSensor, country, city, measure, timestamp);
+        return new SensorData(idSensor, country, city, gpsCoordinates, measureType, measureValue, timestamp);
     }
 
     /**
@@ -117,10 +157,12 @@ public class StandaloneSensorMain {
             "Help:\n\n" +
                     "    Sample [-h] [-m <mode>] [-i <id Sensor>] [-p <country>] [-v <city>]\n\n" +
                     "    -h  Print this help text and quit\n" +
-                    "    -m  Desired mode (mqtt or http)\n" +
+                    "    -m  Desired mode (mqtt, http)\n" +
                     "    -i  Sensor ID\n" +
                     "    -p  Desired country\n" +
-                    "    -v  Desired city\n"
+                    "    -v  Desired city\n" +
+                    "    -g  GPS coordinates\n" +
+                    "    -t  Measure type (temp, pres, wspeed, wdir)\n"
         );
     }
 }

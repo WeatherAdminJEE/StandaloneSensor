@@ -21,7 +21,6 @@ import java.net.URLConnection;
 @Setter
 public class HTTPPublisher implements IPublisher {
 
-    private final String USER_AGENT = "Mozilla/5.0";
     private String serverUrl;
 
     /**
@@ -71,9 +70,9 @@ public class HTTPPublisher implements IPublisher {
         return "idSensor="+String.valueOf(sensorData.getIdSensor())
                 +"&idCountry="+sensorData.getIdCountry()
                 +"&idCity="+sensorData.getIdCity()
-                +"&temperature="+String.valueOf(sensorData.getMeasure().getTemperature())
-                +"&windSpeed="+String.valueOf(sensorData.getMeasure().getWindSpeed())
-                +"&pressure="+String.valueOf(sensorData.getMeasure().getPressure())
+                +"&gpsCoordinates="+sensorData.getGpsCoordinates()
+                +"&measureType="+sensorData.getMeasureType()
+                +"&measureValue="+sensorData.getMeasureValue()
                 +"&timestamp="+sensorData.getDate().toString();
     }
 }

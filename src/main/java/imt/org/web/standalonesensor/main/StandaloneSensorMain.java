@@ -1,7 +1,7 @@
 package imt.org.web.standalonesensor.main;
 
-import imt.org.web.commonmodel.MeasureType;
-import imt.org.web.commonmodel.SensorData;
+import imt.org.web.commonmodel.model.MeasureType;
+import imt.org.web.commonmodel.model.SensorData;
 import imt.org.web.standalonesensor.publisher.IPublisher;
 import imt.org.web.standalonesensor.publisher.http.HTTPPublisher;
 import imt.org.web.standalonesensor.publisher.mqtt.MQTTPublisher;

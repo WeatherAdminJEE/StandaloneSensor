@@ -1,6 +1,6 @@
 package imt.org.web.standalonesensor.publisher;
 
-import imt.org.web.commonmodel.SensorData;
+import imt.org.web.commonmodel.model.SensorData;
 
 /**
  * Publisher interface

@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 public class MQTTPublisher implements IPublisher, MqttCallback {
 
     private MqttClient client;
+    private MqttConnectOptions connectOptions;
     private String brokerUrl;
     private String topic;
     private int qos;
@@ -39,6 +40,9 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
         MqttDefaultFilePersistence dataStore = new MqttDefaultFilePersistence(tmpDir);
 
         try {
+            connectOptions = new MqttConnectOptions();
+            connectOptions.setCleanSession(cleanSession);
+
             // Construct an MQTT blocking mode client
             client = new MqttClient(this.brokerUrl, clientId, dataStore);
             client.setCallback(this);
@@ -70,7 +74,7 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
         try {
             // Connect client
             System.out.println("Connecting to " + brokerUrl + " with client ID " + client.getClientId());
-            client.connect();
+            client.connect(connectOptions);
             System.out.println("Connected");
 
             printSentData(sensorData);

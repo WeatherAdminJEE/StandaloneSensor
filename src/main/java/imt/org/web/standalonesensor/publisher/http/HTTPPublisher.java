@@ -1,11 +1,10 @@
 package imt.org.web.standalonesensor.publisher.http;
 
+import imt.org.web.commonmodel.model.MeasureType;
 import imt.org.web.commonmodel.model.SensorData;
-import imt.org.web.standalonesensor.publisher.IPublisher;
+import imt.org.web.standalonesensor.generator.SensorDataGenerator;
+import imt.org.web.standalonesensor.publisher.Publisher;
 import imt.org.web.standalonesensor.main.StandaloneSensorMain;
-
-import lombok.Getter;
-import lombok.Setter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,17 +16,35 @@ import java.net.URLConnection;
 /**
  * HTTP Publisher class
  */
-@Getter
-@Setter
-public class HTTPPublisher implements IPublisher {
+public class HTTPPublisher extends Publisher {
 
+    // SensorDataReceiver param
     private String serverUrl;
 
     /**
      * Constructor
+     * @param idSensor ID Sensor
+     * @param idCountry ID Country
+     * @param idCity ID City
+     * @param gpsCoordinates GPS coordinates
      */
-    public HTTPPublisher() {
+    public HTTPPublisher(int idSensor, String idCountry, String idCity, String gpsCoordinates, MeasureType measureType) {
         serverUrl = StandaloneSensorMain.CONFIG.getString("SensorServer");
+
+        // Init sensor params
+        setIdSensor(idSensor);
+        setIdCountry(idCountry);
+        setIdCity(idCity);
+        setGpsCoordinates(gpsCoordinates);
+        setMeasureType(measureType);
+    }
+
+    /**
+     * @see Thread#run()
+     */
+    @Override
+    public void run() {
+        publish(SensorDataGenerator.generate(getIdSensor(), getIdCountry(), getIdCity(), getGpsCoordinates(), getMeasureType()));
     }
 
     /**
@@ -64,7 +81,7 @@ public class HTTPPublisher implements IPublisher {
     /**
      * Set POST request params
      * @param sensorData SensorData to set params
-     * @return URI params
+     * @return URI POST params
      */
     public String setPOSTParams(SensorData sensorData) {
         return "idSensor="+String.valueOf(sensorData.getIdSensor())

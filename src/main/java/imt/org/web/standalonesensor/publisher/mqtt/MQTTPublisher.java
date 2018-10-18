@@ -1,11 +1,11 @@
 package imt.org.web.standalonesensor.publisher.mqtt;
 
+import imt.org.web.commonmodel.model.MeasureType;
 import imt.org.web.commonmodel.model.SensorData;
-import imt.org.web.standalonesensor.publisher.IPublisher;
+import imt.org.web.standalonesensor.generator.SensorDataGenerator;
+import imt.org.web.standalonesensor.publisher.Publisher;
 import imt.org.web.standalonesensor.main.StandaloneSensorMain;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
@@ -17,10 +17,9 @@ import java.io.ObjectOutputStream;
 /**
  * MQTT Publisher class
  */
-@Getter
-@Setter
-public class MQTTPublisher implements IPublisher, MqttCallback {
+public class MQTTPublisher extends Publisher implements MqttCallback {
 
+    // MQTT broker params
     private MqttClient client;
     private MqttConnectOptions connectOptions;
     private String brokerUrl;
@@ -30,10 +29,20 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
 
     /**
      * Constructor
-     * @param clientId ID of the client to connect MQTT broker
+     * @param idSensor ID Sensor
+     * @param idCountry ID Country
+     * @param idCity ID City
+     * @param gpsCoordinates GPS coordinates
      */
-    public MQTTPublisher(String clientId) {
+    public MQTTPublisher(int idSensor, String idCountry, String idCity, String gpsCoordinates, MeasureType measureType) {
         initMQTTPublisher();
+
+        // Init sensor params
+        setIdSensor(idSensor);
+        setIdCountry(idCountry);
+        setIdCity(idCity);
+        setGpsCoordinates(gpsCoordinates);
+        setMeasureType(measureType);
 
         // Temp directory
         String tmpDir = System.getProperty("java.io.tmpdir");
@@ -44,11 +53,11 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
             connectOptions.setCleanSession(cleanSession);
 
             // Construct an MQTT blocking mode client
-            client = new MqttClient(this.brokerUrl, clientId, dataStore);
+            client = new MqttClient(this.brokerUrl, "Sensor"+idSensor, dataStore);
             client.setCallback(this);
         } catch (MqttException e) {
             System.out.println("MQTTPublisher() - Unable to set up client : " + e.getMessage());
-            System.exit(1);
+            System.exit(0);
         }
     }
 
@@ -63,6 +72,14 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
         cleanSession = true;
         qos = 2;
         topic = StandaloneSensorMain.CONFIG.getString("MQTTTopic");
+    }
+
+    /**
+     * @see Thread#run()
+     */
+    @Override
+    public void run() {
+        publish(SensorDataGenerator.generate(getIdSensor(), getIdCountry(), getIdCity(), getGpsCoordinates(), getMeasureType()));
     }
 
     /**
@@ -115,15 +132,21 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
     /**
      * @see MqttCallback#connectionLost(Throwable)
      */
+    @Override
     public void connectionLost(Throwable cause) {
         // Called when the connection to the server has been lost.
         System.out.println("connectionLost() - Connection to " + brokerUrl + " lost : " + cause);
-        System.exit(1);
+        try {
+            client.connect(connectOptions);
+        } catch (MqttException e) {
+            System.out.println("connectionLost() - Unable to reconnect broker - " + e.getMessage());
+        }
     }
 
     /**
      * @see MqttCallback#deliveryComplete(IMqttDeliveryToken)
      */
+    @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         // Called when a message has been delivered to the server
         System.out.println("deliveryComplete() - Message has been successfully delivered");
@@ -132,6 +155,7 @@ public class MQTTPublisher implements IPublisher, MqttCallback {
     /**
      * @see MqttCallback#messageArrived(String, MqttMessage)
      */
+    @Override
     public void messageArrived(String topic, MqttMessage message) {
         // Unused - Called when a message arrives from the server
     }

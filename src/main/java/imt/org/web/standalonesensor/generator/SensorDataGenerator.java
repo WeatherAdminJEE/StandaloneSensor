@@ -25,16 +25,16 @@ public class SensorDataGenerator {
         double measureValue = 0.0;
         switch(measureType) {
             case TEMPERATURE:
-                measureValue = Precision.round(17 + Math.random() * 11,2);
+                measureValue = Precision.round(20 + Math.random() * 2,2);
                 break;
             case ATM_PRESSURE:
-                measureValue = Precision.round(1010 + Math.random() * 5,2);
+                measureValue = Precision.round(1009 + Math.random() * 3,1);
                 break;
             case WIND_SPEED:
-                measureValue = Precision.round(Math.random() * 60,2);
+                measureValue = Precision.round(20 + Math.random() * 20,2);
                 break;
             case WIND_DIRECTION:
-                measureValue = Precision.round(Math.random() * 60,2);
+                measureValue = Precision.round(180 + Math.random() * 180,1);
                 break;
         }
         Timestamp timestamp = new Timestamp(new Date().getTime());
